@@ -7,7 +7,7 @@ auth_bp = Blueprint('auth', __name__)
 def register():
     data = request.get_json()
     if not data:
-        return jsonify({"error": "Missing request body"}), 400
+        return jsonify({"message": "Invalid request"}), 400
     
     result, status_code = AuthService.register_user(data)
     return jsonify(result), status_code
@@ -15,8 +15,8 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    if not data:
-        return jsonify({"error": "Missing request body"}), 400
+    if not data or 'login_id' not in data or 'password' not in data:
+        return jsonify({"message": "Login ID and password are required"}), 400
         
     result, status_code = AuthService.login_user(data)
     return jsonify(result), status_code

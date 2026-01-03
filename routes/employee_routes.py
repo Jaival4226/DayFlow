@@ -23,13 +23,16 @@ def get_employee_grid():
     employees = Employee.query.all()
     grid_data = []
     
+    # ... inside get_employee_grid() ...
+
     for emp in employees:
         grid_data.append({
             "employee_id": emp.user.employee_id_number,
             "full_name": f"{emp.first_name} {emp.last_name}",
             "designation": emp.designation,
             "department": emp.department,
-            "status": AttendanceService.get_employee_current_status(emp.id) 
+            "status": AttendanceService.get_employee_current_status(emp.id),
+            "profile_picture": emp.profile_picture  # <--- ADD THIS LINE
         })
         
     return jsonify(grid_data), 200

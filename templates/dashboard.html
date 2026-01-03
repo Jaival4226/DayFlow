@@ -145,7 +145,25 @@
             return;
         }
 
-        grid.innerHTML = employees.map(emp => `
+        grid.innerHTML = employees.map(emp => {
+            // LOGIC: Check if image exists, otherwise use Initials
+            let imageHtml = '';
+            if (emp.profile_picture && emp.profile_picture !== 'default.jpg') {
+                imageHtml = `
+                    <img src="/static/uploads/profiles/${emp.profile_picture}" 
+                         class="mb-3 mx-auto rounded-circle shadow-sm" 
+                         style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #fff;">
+                `;
+            } else {
+                imageHtml = `
+                    <div class="mb-3 mx-auto rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold" 
+                         style="width: 80px; height: 80px; font-size: 1.5rem;">
+                        ${getInitials(emp.full_name)}
+                    </div>
+                `;
+            }
+
+            return `
             <div class="col-md-4 col-lg-3">
                 <div class="card h-100 shadow-sm border-0 text-center p-3" onclick="window.location.href='/profile/${emp.employee_id}'" style="cursor: pointer; transition: transform 0.2s;">
                     <div class="card-body">
@@ -153,9 +171,7 @@
                             <span class="badge rounded-pill ${getStatusColor(emp.status)}">&nbsp;</span>
                         </div>
                         
-                        <div class="mb-3 mx-auto rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 80px; height: 80px; font-size: 1.5rem;">
-                            ${getInitials(emp.full_name)}
-                        </div>
+                        ${imageHtml}
                         
                         <h5 class="card-title mb-1 text-truncate">${emp.full_name}</h5>
                         <p class="text-muted small mb-2">${emp.designation}</p>
@@ -166,7 +182,7 @@
                     </div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     function filterEmployees() {

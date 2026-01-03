@@ -1,18 +1,16 @@
-def test_salary_calculation_logic(client, admin_token):
+def test_salary_component_accuracy(client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
+    payload = {"monthly_gross": 100000}
 
-    payload = {"monthly_gross": 50000}
     response = client.post('/payroll/calculate', json=payload, headers=headers)
-
     data = response.json
-    assert data['basic'] == 20000
-    assert data['hra'] == 10000
-    assert data['conveyance'] == 1600
+
+    assert data['basic'] == 40000
+    assert data['hra'] == 20000
+    assert data['pf'] == 4800
 
 
-def test_payroll_tab_visibility(client, employee_token):
+def test_employee_payroll_lock(client, employee_token):
     headers = {"Authorization": f"Bearer {employee_token}"}
-    response = client.get('/employee/profile/tabs', headers=headers)
-
-    tabs = response.json['available_tabs']
-    assert "Salary Info" not in tabs
+    response = client.put('/payroll/update-structure/EMP001', headers=headers)
+    assert response.status_code == 403

@@ -3,11 +3,10 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import enum
 
-# Define strict roles
 class UserRole(enum.Enum):
-    ADMIN = 'Admin'       # Full Access (Manages employees, approves leave)
-    HR = 'HR'             # Full Access (Same privileges as Admin)
-    EMPLOYEE = 'Employee' # Limited Access (View profile, apply for leave)
+    ADMIN = 'Admin'
+    HR = 'HR'
+    EMPLOYEE = 'Employee'
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -17,19 +16,12 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Auth Details
     employee_id_number = db.Column(db.String(20), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    
-    # Role Management
     role = db.Column(db.Enum(UserRole), default=UserRole.EMPLOYEE, nullable=False)
-    
-    # Security: Email Verification
     is_verified = db.Column(db.Boolean, default=False)
 
-    # Relationship to Employee Profile
     employee_profile = db.relationship('Employee', backref='user', uselist=False)
 
     def set_password(self, password):
@@ -38,14 +30,17 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # --- Helper Methods for Access Control ---
-    
+    @property
+    def name(self):
+        """Helper to get full name for templates"""
+        if self.employee_profile:
+            return f"{self.employee_profile.first_name} {self.employee_profile.last_name}"
+        return self.email
+
     @property
     def is_manager(self):
-        """Returns True if user is Admin OR HR."""
         return self.role in [UserRole.ADMIN, UserRole.HR]
 
     @property
     def is_admin(self):
-        """Strictly checks for Admin role."""
         return self.role == UserRole.ADMIN

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Dayflow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Welcome back, {{ current_user.name }}! 👋</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-primary" onclick="triggerCheckIn()">
+            <i class="fas fa-fingerprint"></i> Check In Now
+        </button>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card kpi-card h-100 p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-muted">Attendance Status</h6>
+                    <h3 class="text-success">Present</h3>
+                </div>
+                <div class="fs-1 text-success opacity-25"><i class="fas fa-check-circle"></i></div>
+            </div>
+            <small class="text-muted">Checked in: 09:00 AM</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card kpi-card h-100 p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-muted">Leave Balance</h6>
+                    <h3>12 Days</h3>
+                </div>
+                <div class="fs-1 text-warning opacity-25"><i class="fas fa-umbrella-beach"></i></div>
+            </div>
+            <small class="text-muted">Annual Leave Remaining</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card kpi-card h-100 p-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-muted">Next Holiday</h6>
+                    <h3>26 Jan</h3>
+                </div>
+                <div class="fs-1 text-info opacity-25"><i class="fas fa-calendar-day"></i></div>
+            </div>
+            <small class="text-muted">Republic Day</small>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Recent Attendance Logs</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Oct 24, 2025</td>
+                    <td>09:02 AM</td>
+                    <td>06:05 PM</td>
+                    <td><span class="badge badge-soft-success">Present</span></td>
+                </tr>
+                <tr>
+                    <td>Oct 23, 2025</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><span class="badge badge-soft-danger">Absent</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

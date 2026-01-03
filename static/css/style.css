@@ -1,0 +1,55 @@
+/* static/css/style.css */
+:root {
+    --primary-color: #4a90e2;
+    --sidebar-width: 260px;
+}
+
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar Logic */
+.sidebar {
+    min-height: 100vh;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    z-index: 1000;
+}
+
+.nav-link {
+    color: #495057;
+    padding: 12px 20px;
+    font-weight: 500;
+    border-radius: 0 25px 25px 0;
+    margin-bottom: 5px;
+    transition: all 0.3s;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: #e3f2fd;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link i {
+    width: 25px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+    transition: transform 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Status Badges */
+.badge-soft-success { background-color: #d1e7dd; color: #0f5132; }
+.badge-soft-warning { background-color: #fff3cd; color: #664d03; }
+.badge-soft-danger { background-color: #f8d7da; color: #842029; }

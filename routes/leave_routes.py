@@ -17,7 +17,7 @@ def apply_leave():
 @leave_bp.route('/my-requests', methods=['GET'])
 @jwt_required()
 def get_my_leaves():
-    user_id = get_jwt_identity()['id']
+    user_id = user_id = get_jwt_identity()
     user = User.query.get(user_id)
     leaves = [ {
         "id": l.id,

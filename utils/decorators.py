@@ -1,17 +1,18 @@
 from functools import wraps
 from flask import jsonify
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt, get_jwt_identity
 from models.user import User, UserRole
 
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        identity = get_jwt_identity()
-        user = User.query.get(identity['id'])
+        # 1. Get the claims (where we now store the role)
+        claims = get_jwt()
+        user_role = claims.get("role")
         
-        # We only allow ADMIN or HR to pass this gate
-        if not user or user.role not in [UserRole.ADMIN, UserRole.HR]:
-            return jsonify({"error": "Unauthorized. Admin or HR access required."}), 403
+        # 2. Check permission
+        if user_role not in [UserRole.ADMIN.value, UserRole.HR.value]:
+            return jsonify({"message": "Unauthorized. Admin or HR access required."}), 403
             
         return f(*args, **kwargs)
     return decorated_function

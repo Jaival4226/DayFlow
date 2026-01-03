@@ -1,0 +1,2 @@
+from .auth_routes import auth_bp
+from .employee_routes import emp_bp

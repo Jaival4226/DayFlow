@@ -1,0 +1,38 @@
+# --- Python & Bytecode ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Virtual Environments ---
+venv/
+env/
+.venv/
+
+# --- Environment Variables (CRITICAL) ---
+.env
+.flaskenv
+
+# --- Database ---
+# Ignore local SQLite databases if you use them for testing
+*.sqlite3
+*.db
+# Ignore migration versions if you want, but usually, we KEEP migrations.
+# Do NOT ignore the migrations folder, but ignore temporary migration files if any.
+
+# --- IDE Settings (VS Code, PyCharm) ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS Generated Files ---
+.DS_Store
+Thumbs.db
+
+# --- Static/Media Files ---
+# If users upload profile pictures, you usually don't want them in git
+static/profile_pics/*
+!static/profile_pics/.gitkeep
+# (The ! line keeps the folder structure but ignores the files inside)
+
+# --- Logs ---
+*.log

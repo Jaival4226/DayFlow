@@ -63,10 +63,13 @@ def get_employee_detail(emp_id):
 # ---------------------------------------------------------
 # 3. UPDATE PROFILE (Logic for the Edit Modal)
 # ---------------------------------------------------------
+import time # Add this import at the top
+
+# ... (keep existing imports)
+
 @employee_bp.route('/update-profile', methods=['POST'])
 @jwt_required()
 def update_profile():
-    # Get the current user from the token
     user_id = get_jwt_identity()
     user = User.query.get(int(user_id))
     
@@ -84,16 +87,34 @@ def update_profile():
     # 2. Handle Image Upload
     if 'profile_picture' in request.files:
         file = request.files['profile_picture']
+        
+        # Check if user actually selected a file
+        if file.filename == '':
+            return jsonify({"message": "No file selected"}), 400
+            
         if file and allowed_file(file.filename):
-            filename = secure_filename(f"user_{user.id}_{file.filename}")
+            # FIX: Add Timestamp to force unique filename (Avoids Cache Issues)
+            timestamp = int(time.time())
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            filename = secure_filename(f"user_{user.id}_{timestamp}.{ext}")
             
             # Ensure upload folder exists
             upload_path = current_app.config['UPLOAD_FOLDER']
             if not os.path.exists(upload_path):
                 os.makedirs(upload_path)
                 
+            # Save file
             file.save(os.path.join(upload_path, filename))
+            
+            # Update DB
             emp.profile_picture = filename
+        else:
+            return jsonify({"message": "Invalid file type. Allowed: png, jpg, jpeg, gif"}), 400
 
     db.session.commit()
-    return jsonify({"message": "Profile updated successfully!", "image_url": emp.profile_picture}), 200
+    
+    # Return the new URL so frontend can update immediately
+    return jsonify({
+        "message": "Profile updated successfully!", 
+        "image_url": emp.profile_picture
+    }), 200

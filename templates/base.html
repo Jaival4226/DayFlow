@@ -14,14 +14,27 @@
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="/dashboard"><i class="fas fa-cube"></i> Dayflow</a>
         
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
         <div class="ms-auto d-flex align-items-center">
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
-                        <i class="fas fa-user"></i>
-                    </div>
+                    
+                    {% if current_user.is_authenticated and current_user.employee_profile and current_user.employee_profile.profile_picture and current_user.employee_profile.profile_picture != 'default.jpg' %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.employee_profile.profile_picture) }}" 
+                             class="rounded-circle me-2 border border-2 border-white" 
+                             style="width: 35px; height: 35px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+
                     <span class="d-none d-md-inline">{{ current_user.name if current_user.is_authenticated else "User" }}</span>
                 </a>
+
                 <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
                     <li><a class="dropdown-item" href="/profile"><i class="fas fa-id-card me-2"></i> My Profile</a></li>
                     <li><hr class="dropdown-divider"></li>

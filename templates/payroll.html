@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My Payroll{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-primary mb-3">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h5 class="mb-0">Current Salary Structure</h5>
+                <small>Effective from Jan 2026</small>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
+                    <span class="text-muted">Basic Salary</span>
+                    <span class="fw-bold">$5,000.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
+                    <span class="text-muted">HRA (Housing)</span>
+                    <span class="fw-bold">$2,000.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
+                    <span class="text-muted">Transport Allowance</span>
+                    <span class="fw-bold">$500.00</span>
+                </div>
+                 <div class="d-flex justify-content-between mb-4 border-bottom pb-2 text-danger">
+                    <span class="text-muted">Tax Deductions</span>
+                    <span class="fw-bold">-$800.00</span>
+                </div>
+                <div class="d-flex justify-content-between bg-light p-3 rounded">
+                    <h5 class="mb-0">Net Pay</h5>
+                    <h5 class="text-primary mb-0">$6,700.00 / mo</h5>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                 <button class="btn btn-sm btn-outline-secondary">Download Payslip (PDF)</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

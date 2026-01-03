@@ -9,20 +9,24 @@ class Employee(db.Model):
     
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
-    
     designation = db.Column(db.String(100))
     department = db.Column(db.String(100))
-    # Note: changed to .date() because Postgres DATE columns don't store time
     date_of_joining = db.Column(db.Date, default=datetime.utcnow().date)
     
+    # NEW: Wireframe specific fields
+    date_of_birth = db.Column(db.Date, nullable=True) 
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
     profile_picture = db.Column(db.String(120), default='default.jpg')
+    
+    # NEW: Salary fields for Admin views
+    monthly_wage = db.Column(db.Float, default=0.0)
+    bank_name = db.Column(db.String(100), default="N/A")
 
-    # ⚠️ COMMENT THESE OUT UNTIL THE OTHER MODELS ARE CREATED
-    # attendance_records = db.relationship('Attendance', backref='employee', lazy=True)
-    # leave_requests = db.relationship('Leave', backref='employee', lazy=True)
-    # payroll_records = db.relationship('Payroll', backref='employee', lazy=True)
+    # FIXED: Relationships enabled for routes to work
+    attendance_records = db.relationship('Attendance', backref='employee', lazy=True)
+    leave_requests = db.relationship('Leave', backref='employee', lazy=True)
+    payroll_records = db.relationship('Payroll', backref='employee', lazy=True)
 
     def __repr__(self):
         return f"<Employee {self.first_name} {self.last_name}>"

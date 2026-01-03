@@ -9,16 +9,16 @@ leave_bp = Blueprint('leave', __name__)
 @leave_bp.route('/apply', methods=['POST'])
 @jwt_required()
 def apply_leave():
-    user_id = get_jwt_identity()['id']
-    user = User.query.get(user_id)
-    # Using the relationship to get employee profile
+    # FIXED: Identity is a string, not a dict
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
     return LeaveService.apply_leave(user.employee_profile.id, request.get_json())
 
 @leave_bp.route('/my-requests', methods=['GET'])
 @jwt_required()
 def get_my_leaves():
-    user_id = user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
     leaves = [ {
         "id": l.id,
         "type": l.leave_type, 
@@ -28,12 +28,10 @@ def get_my_leaves():
     } for l in user.employee_profile.leave_requests ]
     return jsonify(leaves), 200
 
-# Admin route to approve leave - Now using your Decorator!
 @leave_bp.route('/approve/<int:leave_id>', methods=['POST'])
 @jwt_required()
 @admin_required
 def approve_leave(leave_id):
-    # This calls the logic in your Service
     result, status_code = LeaveService.approve_leave(leave_id)
     return jsonify(result), status_code
 

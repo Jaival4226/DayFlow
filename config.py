@@ -23,3 +23,7 @@ class Config:
     # 2. SECURITY CONFIGURATION
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-jwt-key-123')
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-123')
+
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static/uploads/profiles')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB Max Size

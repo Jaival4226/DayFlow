@@ -4,47 +4,77 @@
 {% block content %}
 <div class="row">
     <div class="col-md-4 mb-4">
-        <div class="card text-center p-4">
-            <div class="mb-3 mx-auto rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 100px; height: 100px; font-size: 2rem;">
-                {{ current_user.initials }}
+        <div class="card text-center p-4 h-100">
+            <div class="mb-3 mx-auto position-relative">
+                {% if emp.profile_picture and emp.profile_picture != 'default.jpg' %}
+                    <img src="{{ url_for('static', filename='uploads/profiles/' + emp.profile_picture) }}" 
+                         class="rounded-circle shadow-sm" 
+                         style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white mx-auto" 
+                         style="width: 120px; height: 120px; font-size: 2.5rem;">
+                        {{ emp.first_name[0] }}{{ emp.last_name[0] }}
+                    </div>
+                {% endif %}
             </div>
-            <h4>{{ current_user.name }}</h4>
-            <p class="text-muted">Software Engineer</p>
-            <button class="btn btn-outline-primary btn-sm">Upload Picture</button>
+            
+            <h4 class="fw-bold">{{ emp.first_name }} {{ emp.last_name }}</h4>
+            <p class="text-muted mb-1">{{ emp.designation }}</p>
+            <span class="badge bg-primary mb-3">{{ emp.department }}</span>
+
+            {% if current_user.employee_profile.id == emp.id %}
+            <button class="btn btn-outline-primary mt-auto" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-edit me-2"></i> Edit Profile
+            </button>
+            {% endif %}
         </div>
     </div>
     
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Personal Details</h5>
+        <div class="card h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Employee Information</h5>
             </div>
             <div class="card-body">
                 <form>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" class="form-control" value="Justin Mason" readonly>
+                            <label class="form-label text-muted">Full Name</label>
+                            <input type="text" class="form-control" value="{{ emp.first_name }} {{ emp.last_name }}" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Employee ID</label>
-                            <input type="text" class="form-control" value="EMP-2025-09" readonly>
+                            <label class="form-label text-muted">Employee ID</label>
+                            <input type="text" class="form-control" value="{{ emp.user.employee_id_number }}" readonly>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" class="form-control" value="justin@dayflow.com" readonly>
+                            <label class="form-label text-muted">Email Address</label>
+                            <input type="email" class="form-control" value="{{ emp.user.email }}" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone</label>
-                            <input type="text" class="form-control" value="+1 555 0123" readonly>
+                            <label class="form-label text-muted">Phone Number</label>
+                            <input type="text" class="form-control" value="{{ emp.phone or 'N/A' }}" readonly>
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Address</label>
-                            <textarea class="form-control" rows="2" readonly>123 Tech Park, Silicon Valley, CA</textarea>
+                        <div class="col-12">
+                            <label class="form-label text-muted">Current Address</label>
+                            <textarea class="form-control" rows="2" readonly>{{ emp.address or 'N/A' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Date of Joining</label>
+                            <input type="text" class="form-control" value="{{ emp.date_of_joining }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                             <label class="form-label text-muted">Monthly Wage</label>
+                             {% if current_user.id == emp.user_id or current_user.role.value == 'Admin' %}
+                                <input type="text" class="form-control" value="₹{{ emp.monthly_wage }}" readonly>
+                             {% else %}
+                                <input type="text" class="form-control" value="Confidential" readonly>
+                             {% endif %}
                         </div>
                     </div>
                 </form>
@@ -52,4 +82,67 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm" onsubmit="handleProfileUpdate(event)">
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" value="{{ emp.phone }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="3">{{ emp.address }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Profile Picture</label>
+                        <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                        <small class="text-muted">Max size 2MB (JPG, PNG)</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function handleProfileUpdate(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const token = localStorage.getItem('access_token');
+
+    try {
+        const response = await fetch('/api/employee/update-profile', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}` 
+                // Note: Do NOT set Content-Type header when sending FormData; 
+                // the browser sets it automatically with the boundary.
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert("✅ " + result.message);
+            location.reload();
+        } else {
+            alert("⚠️ " + result.message);
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Failed to update profile.");
+    }
+}
+</script>
 {% endblock %}

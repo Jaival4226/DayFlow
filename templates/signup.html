@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up - Dayflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f4f6f9; 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            padding: 20px; /* Prevents edges from touching on small screens */
+        }
+        .login-card { 
+            width: 100%; 
+            max-width: 750px; /* Wider card for side-by-side inputs */
+            border-radius: 15px; 
+            border: none; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="card login-card p-4 p-md-5">
+        <div class="card-body">
+            <h3 class="text-center text-primary fw-bold mb-2">Dayflow</h3>
+            <p class="text-center text-muted mb-4">Create your organization account</p>
+            
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" name="company_name" class="form-control" placeholder="Ex: TechCorp" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Admin Full Name</label>
+                        <input type="text" name="full_name" class="form-control" placeholder="John Doe" required>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="john@company.com" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+1 234 567 8900" required>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="confirm_password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 col-md-6 mx-auto">
+                    <button type="submit" class="btn btn-primary py-2">Create Account</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <small class="text-muted">Already have an account? <a href="/login" class="text-decoration-none fw-bold">Sign In</a></small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function handleSignup(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+
+            // 1. Validate Passwords Match
+            if (password !== confirm) {
+                alert("❌ Passwords do not match!");
+                return;
+            }
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Account Created!\nYour Login ID is: ${result.login_id}\nUse this or your Email to login.`);
+                    window.location.href = '/login';
+                } else {
+                    alert("⚠️ " + (result.message || "Registration failed"));
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Failed to connect to server.");
+            }
+        }
+    </script>
+</body>
+</html>

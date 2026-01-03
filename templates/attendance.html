@@ -4,9 +4,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Attendance Records</h2>
-    <div>
-        <span class="badge bg-white text-dark border p-2">Month: October 2025</span>
-    </div>
+    <button class="btn btn-outline-primary" onclick="loadAttendance()">
+        <i class="fas fa-sync-alt"></i> Refresh
+    </button>
 </div>
 
 <div class="card">
@@ -21,23 +21,59 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>Oct 24, 2025</td>
-                    <td>09:00 AM</td>
-                    <td>06:00 PM</td>
-                    <td>9h 00m</td>
-                    <td><span class="badge badge-soft-success">Present</span></td>
-                </tr>
-                 <tr>
-                    <td>Oct 23, 2025</td>
-                    <td>09:15 AM</td>
-                    <td>06:00 PM</td>
-                    <td>8h 45m</td>
-                    <td><span class="badge badge-soft-warning">Late</span></td>
-                </tr>
+            <tbody id="attendanceTable">
+                <tr><td colspan="5" class="text-center p-4">Loading...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', loadAttendance);
+
+async function loadAttendance() {
+    const token = localStorage.getItem('access_token');
+    const tbody = document.getElementById('attendanceTable');
+
+    try {
+        const response = await fetch('/api/attendance/my-history', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const records = await response.json();
+
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">No records found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = records.map(r => `
+            <tr>
+                <td>${r.date}</td>
+                <td>${r.check_in}</td>
+                <td>${r.check_out}</td>
+                <td>${r.work_hours} hrs</td>
+                <td><span class="badge ${getStatusBadge(r.status)}">${r.status}</span></td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger p-4">Failed to load data.</td></tr>';
+    }
+}
+
+function getStatusBadge(status) {
+    if(status === 'present') return 'badge-soft-success';
+    if(status === 'absent') return 'badge-soft-danger';
+    if(status === 'late') return 'badge-soft-warning';
+    return 'bg-secondary';
+}
+</script>
+
+<style>
+/* Add the badge styles back if missing */
+.badge-soft-success { background-color: #d1e7dd; color: #0f5132; padding: 5px 10px; border-radius: 20px;}
+.badge-soft-warning { background-color: #fff3cd; color: #664d03; padding: 5px 10px; border-radius: 20px;}
+.badge-soft-danger { background-color: #f8d7da; color: #842029; padding: 5px 10px; border-radius: 20px;}
+</style>
 {% endblock %}

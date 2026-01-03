@@ -2,39 +2,102 @@
 {% block title %}My Payroll{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 mx-auto">
-        <div class="card border-primary mb-3">
-            <div class="card-header bg-primary text-white text-center py-3">
-                <h5 class="mb-0">Current Salary Structure</h5>
-                <small>Effective from Jan 2026</small>
-            </div>
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
-                    <span class="text-muted">Basic Salary</span>
-                    <span class="fw-bold">$5,000.00</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
-                    <span class="text-muted">HRA (Housing)</span>
-                    <span class="fw-bold">$2,000.00</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
-                    <span class="text-muted">Transport Allowance</span>
-                    <span class="fw-bold">$500.00</span>
-                </div>
-                 <div class="d-flex justify-content-between mb-4 border-bottom pb-2 text-danger">
-                    <span class="text-muted">Tax Deductions</span>
-                    <span class="fw-bold">-$800.00</span>
-                </div>
-                <div class="d-flex justify-content-between bg-light p-3 rounded">
-                    <h5 class="mb-0">Net Pay</h5>
-                    <h5 class="text-primary mb-0">$6,700.00 / mo</h5>
-                </div>
-            </div>
-            <div class="card-footer text-center">
-                 <button class="btn btn-sm btn-outline-secondary">Download Payslip (PDF)</button>
-            </div>
-        </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Salary Slips</h2>
+    <span class="text-muted">Generated automatically on the 28th of every month</span>
+</div>
+
+<div class="row g-4" id="payrollContainer">
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Fetching your payslips...</p>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('access_token');
+    const container = document.getElementById('payrollContainer');
+
+    try {
+        const response = await fetch('/api/payroll/my-slips', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const slips = await response.json();
+
+        if (slips.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted">No payroll records found.</div>';
+            return;
+        }
+
+        container.innerHTML = slips.map((slip, index) => {
+            const slipId = `payslip-${index}`;
+            return `
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div id="${slipId}" class="p-4 bg-white rounded-top">
+                        <div class="text-center border-bottom pb-3 mb-3">
+                            <h5 class="fw-bold text-primary mb-0">DAYFLOW INC.</h5>
+                            <small class="text-muted">Salary Slip for ${slip.month} ${slip.year}</small>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-6 text-muted small">Generated On:</div>
+                            <div class="col-6 text-end small fw-bold">${slip.generated_on}</div>
+                        </div>
+
+                        <div class="py-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Basic Salary</span>
+                                <span class="fw-bold">₹${slip.basic.toLocaleString()}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1 text-success">
+                                <span>Allowances</span>
+                                <span>+ ₹${slip.allowances.toLocaleString()}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3 text-danger">
+                                <span>Deductions</span>
+                                <span>- ₹${slip.deductions.toLocaleString()}</span>
+                            </div>
+                            
+                            <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark">NET PAY</span>
+                                <span class="h5 mb-0 text-primary">₹${slip.net_salary.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 text-center pb-4">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="downloadPDF('${slipId}', '${slip.month}', '${slip.year}')">
+                            <i class="fas fa-file-pdf me-2"></i> Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="text-danger text-center">Failed to load payroll data.</p>';
+    }
+});
+
+function downloadPDF(elementId, month, year) {
+    const element = document.getElementById(elementId);
+    
+    // PDF Configuration
+    const opt = {
+        margin:       [10, 10],
+        filename:     `Payslip_${month}_${year}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Generate and Download
+    html2pdf().set(opt).from(element).save();
+}
+</script>
 {% endblock %}

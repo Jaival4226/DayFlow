@@ -9,7 +9,7 @@
                 <h5 class="mb-0">Apply for Leave</h5>
             </div>
             <div class="card-body">
-                <form action="/leave/apply" method="POST">
+                <form id="leaveForm" onsubmit="handleLeaveApply(event)">
                     <div class="mb-3">
                         <label class="form-label">Leave Type</label>
                         <select class="form-select" name="leave_type">
@@ -42,32 +42,91 @@
                 <h5 class="mb-0">My Leave History</h5>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle" id="leaveTable">
                     <thead class="table-light">
                         <tr>
                             <th>Type</th>
-                            <th>Dates</th>
-                            <th>Days</th>
+                            <th>Start</th>
+                            <th>End</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>Sick Leave</td>
-                            <td>Nov 10 - Nov 12</td>
-                            <td>3 Days</td>
-                            <td><span class="badge badge-soft-success">Approved</span></td>
-                        </tr>
-                        <tr>
-                            <td>Paid Leave</td>
-                            <td>Dec 24 - Dec 30</td>
-                            <td>7 Days</td>
-                            <td><span class="badge badge-soft-warning">Pending</span></td>
-                        </tr>
-                    </tbody>
+                    <tbody id="leaveTableBody">
+                        </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // 1. Handle Form Submit
+    async function handleLeaveApply(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        const token = localStorage.getItem('access_token');
+
+        try {
+            const response = await fetch('/api/leave/apply', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert("✅ " + result.message);
+                loadMyLeaves(); // Refresh list
+                form.reset();
+            } else {
+                alert("⚠️ " + (result.error || result.message));
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to submit request.");
+        }
+    }
+
+    // 2. Load Leave History on Page Load
+    async function loadMyLeaves() {
+        const token = localStorage.getItem('access_token');
+        const tbody = document.getElementById('leaveTableBody');
+        
+        try {
+            const response = await fetch('/api/leave/my-requests', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            
+            if(response.ok) {
+                tbody.innerHTML = data.map(leave => `
+                    <tr>
+                        <td>${leave.type}</td>
+                        <td>${leave.start}</td>
+                        <td>${leave.end}</td>
+                        <td>
+                            <span class="badge ${getStatusBadge(leave.status)}">
+                                ${leave.status}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function getStatusBadge(status) {
+        if(status === 'Approved') return 'bg-success';
+        if(status === 'Rejected') return 'bg-danger';
+        return 'bg-warning text-dark';
+    }
+
+    // Initialize
+    loadMyLeaves();
+</script>
 {% endblock %}

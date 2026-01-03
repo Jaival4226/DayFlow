@@ -22,27 +22,38 @@ class AuthService:
     def register_user(data):
         """Creates User and Employee profile together"""
         try:
-            generated_id = AuthService.generate_login_id(data['first_name'], data['last_name'])
+            # 1. Handle Name Splitting (Full Name -> First + Last)
+            full_name = data.get('full_name', '').strip()
+            if ' ' in full_name:
+                first_name, last_name = full_name.rsplit(' ', 1)
+            else:
+                first_name = full_name
+                last_name = "User" # Fallback if no last name provided
+
+            # 2. Generate ID
+            generated_id = AuthService.generate_login_id(first_name, last_name)
             
+            # 3. Create Login User
             new_user = User(
                 employee_id_number=generated_id,
                 email=data.get('email'),
-                role=UserRole(data.get('role', 'employee')),
+                role=UserRole.EMPLOYEE, # Default to Employee for new signups
                 is_verified=True
             )
             
-            temp_password = data.get('password', "password123") 
-            new_user.set_password(temp_password)
+            new_user.set_password(data.get('password'))
             
             db.session.add(new_user)
-            db.session.flush()
+            db.session.flush() # Get the ID before creating profile
 
+            # 4. Create Profile
+            # Note: We save 'Company Name' into 'Department' to keep DB simple
             new_profile = Employee(
                 user_id=new_user.id,
-                first_name=data['first_name'],
-                last_name=data['last_name'],
-                designation=data.get('designation', 'Trainee'),
-                department=data.get('department', 'General'),
+                first_name=first_name,
+                last_name=last_name,
+                designation="New Hire",
+                department=data.get('company_name', 'General'), 
                 date_of_joining=date.today(),
                 phone=data.get('phone')
             )
@@ -69,11 +80,16 @@ class AuthService:
         ).first()
 
         if user and user.check_password(password):
-            # FIX: Identity is a STRING. Role is in additional_claims.
             access_token = create_access_token(
                 identity=str(user.id), 
                 additional_claims={"role": user.role.value}
             )
+            
+            # SAFE NAME CHECK
+            if user.employee_profile:
+                full_name = f"{user.employee_profile.first_name} {user.employee_profile.last_name}"
+            else:
+                full_name = "Admin User" # Fallback if profile is missing
             
             return {
                 "token": access_token,
@@ -81,9 +97,7 @@ class AuthService:
                 "message": "Login successful",
                 "user": {
                     "id": user.employee_id_number,
-                    "name": f"{user.employee_profile.first_name} {user.employee_profile.last_name}",
+                    "name": full_name,
                     "email": user.email
                 }
             }, 200
-        
-        return {"message": "Invalid credentials"}, 401

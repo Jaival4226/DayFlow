@@ -4,82 +4,196 @@
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Welcome back, {{ current_user.name }}! 👋</h1>
+    <h1 class="h2">
+        {% if user_role == 'admin' %}
+            Overview & Employees
+        {% else %}
+            Welcome back, {{ current_user.employee_profile.first_name }}! 👋
+        {% endif %}
+    </h1>
+    
+    {% if user_role != 'admin' %}
     <div class="btn-toolbar mb-2 mb-md-0">
-        <button type="button" class="btn btn-primary" onclick="triggerCheckIn()">
-            <i class="fas fa-fingerprint"></i> Check In Now
-        </button>
+        {% if status == 'present' %}
+            <button type="button" class="btn btn-warning text-white" onclick="triggerCheckOut()">
+                <i class="fas fa-sign-out-alt"></i> Check Out
+            </button>
+        {% else %}
+            <button type="button" class="btn btn-primary" onclick="triggerCheckIn()">
+                <i class="fas fa-fingerprint"></i> Check In Now
+            </button>
+        {% endif %}
     </div>
+    {% endif %}
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card kpi-card h-100 p-3">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h6 class="text-muted">Attendance Status</h6>
-                    <h3 class="text-success">Present</h3>
-                </div>
-                <div class="fs-1 text-success opacity-25"><i class="fas fa-check-circle"></i></div>
+{% if user_role == 'admin' %}
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Search employees by name, ID, or department..." onkeyup="filterEmployees()">
             </div>
-            <small class="text-muted">Checked in: 09:00 AM</small>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card kpi-card h-100 p-3">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h6 class="text-muted">Leave Balance</h6>
-                    <h3>12 Days</h3>
-                </div>
-                <div class="fs-1 text-warning opacity-25"><i class="fas fa-umbrella-beach"></i></div>
-            </div>
-            <small class="text-muted">Annual Leave Remaining</small>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card kpi-card h-100 p-3">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h6 class="text-muted">Next Holiday</h6>
-                    <h3>26 Jan</h3>
-                </div>
-                <div class="fs-1 text-info opacity-25"><i class="fas fa-calendar-day"></i></div>
-            </div>
-            <small class="text-muted">Republic Day</small>
-        </div>
-    </div>
-</div>
 
-<div class="card">
-    <div class="card-header bg-white py-3">
-        <h5 class="mb-0">Recent Attendance Logs</h5>
+    <div class="row g-4" id="employeeGrid">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading employee data...</p>
+        </div>
     </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Date</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Oct 24, 2025</td>
-                    <td>09:02 AM</td>
-                    <td>06:05 PM</td>
-                    <td><span class="badge badge-soft-success">Present</span></td>
-                </tr>
-                <tr>
-                    <td>Oct 23, 2025</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td><span class="badge badge-soft-danger">Absent</span></td>
-                </tr>
-            </tbody>
-        </table>
+
+{% else %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted">Attendance Status</h6>
+                        <h3 class="{{ 'text-success' if status == 'present' else 'text-danger' }}">
+                            {{ status|title }}
+                        </h3>
+                    </div>
+                    <div class="fs-1 opacity-25 {{ 'text-success' if status == 'present' else 'text-danger' }}">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <small class="text-muted">{{ date }}</small>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted">My Role</h6>
+                        <h3>{{ current_user.employee_profile.designation }}</h3>
+                    </div>
+                    <div class="fs-1 text-info opacity-25"><i class="fas fa-user-tag"></i></div>
+                </div>
+                <small class="text-muted">{{ current_user.employee_profile.department }}</small>
+            </div>
+        </div>
     </div>
-</div>
+
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Recent Activity</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in history %}
+                    <tr>
+                        <td>{{ log.date }}</td>
+                        <td>{{ log.check_in }}</td>
+                        <td>{{ log.check_out }}</td>
+                        <td>
+                            <span class="badge {{ 'bg-success' if log.status == 'present' else 'bg-secondary' }}">
+                                {{ log.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center text-muted">No records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if user_role == 'admin' %}
+<script>
+    // Define the loader script specifically for the Admin View
+    document.addEventListener('DOMContentLoaded', loadEmployeeGrid);
+
+    let allEmployees = [];
+
+    async function loadEmployeeGrid() {
+        const token = localStorage.getItem('access_token');
+        const grid = document.getElementById('employeeGrid');
+        
+        try {
+            const response = await fetch('/api/employee/list', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            allEmployees = await response.json();
+            
+            renderGrid(allEmployees);
+        } catch (error) {
+            console.error('Error loading employees:', error);
+            grid.innerHTML = '<p class="text-center text-danger">Failed to load data.</p>';
+        }
+    }
+
+    function renderGrid(employees) {
+        const grid = document.getElementById('employeeGrid');
+        if (employees.length === 0) {
+            grid.innerHTML = '<p class="text-center text-muted">No employees found.</p>';
+            return;
+        }
+
+        grid.innerHTML = employees.map(emp => `
+            <div class="col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm border-0 text-center p-3" onclick="window.location.href='/profile/${emp.employee_id}'" style="cursor: pointer; transition: transform 0.2s;">
+                    <div class="card-body">
+                        <div class="position-absolute top-0 end-0 p-2">
+                            <span class="badge rounded-pill ${getStatusColor(emp.status)}">&nbsp;</span>
+                        </div>
+                        
+                        <div class="mb-3 mx-auto rounded-circle bg-light d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                            ${getInitials(emp.full_name)}
+                        </div>
+                        
+                        <h5 class="card-title mb-1 text-truncate">${emp.full_name}</h5>
+                        <p class="text-muted small mb-2">${emp.designation}</p>
+                        <span class="badge bg-light text-dark border">${emp.department}</span>
+                    </div>
+                    <div class="card-footer bg-white border-0">
+                        <small class="text-primary">View Profile <i class="fas fa-arrow-right ms-1"></i></small>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterEmployees() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allEmployees.filter(emp => 
+            emp.full_name.toLowerCase().includes(query) ||
+            emp.department.toLowerCase().includes(query) ||
+            emp.employee_id.toLowerCase().includes(query)
+        );
+        renderGrid(filtered);
+    }
+
+    function getStatusColor(status) {
+        if (status === 'present') return 'bg-success';
+        if (status === 'absent') return 'bg-danger';
+        if (status === 'on_leave') return 'bg-warning';
+        return 'bg-secondary';
+    }
+
+    function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+    }
+</script>
+<style>
+    /* Hover effect for cards */
+    .card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+</style>
+{% endif %}
+
 {% endblock %}

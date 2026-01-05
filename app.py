@@ -77,15 +77,17 @@ from models.user import User, UserRole # Ensure UserRole is imported
 @app.route('/dashboard')
 @login_required
 def dashboard_page():
-    # 1. ADMIN DASHBOARD (Directory View)
-    if current_user.role in [UserRole.ADMIN, UserRole.HR]:
-        return render_template('dashboard.html', user_role='admin')
-    
-    # 2. EMPLOYEE DASHBOARD (Personal View)
+    # 1. Get Status for EVERYONE (So the button works)
     status = AttendanceService.get_employee_current_status(current_user.employee_profile.id)
+    
+    # 2. Get History (Optional for Admin, but good to have)
     history = AttendanceService.get_employee_history(current_user.employee_profile.id)[:5]
-    return render_template('dashboard.html', user_role='employee', status=status, history=history)
 
+    if current_user.role in [UserRole.ADMIN, UserRole.HR]:
+        # PASS 'status' variable here!
+        return render_template('dashboard.html', user_role='admin', status=status)
+    
+    return render_template('dashboard.html', user_role='employee', status=status, history=history)
 # Route to view YOUR OWN profile
 @app.route('/profile')
 @login_required

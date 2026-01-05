@@ -10,9 +10,17 @@ class Payroll(db.Model):
     month = db.Column(db.String(20), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     
+    # --- EARNINGS ---
     basic_salary = db.Column(db.Float, nullable=False)
-    allowances = db.Column(db.Float, default=0.0)
-    deductions = db.Column(db.Float, default=0.0)
+    hra = db.Column(db.Float, default=0.0)       # House Rent Allowance
+    da = db.Column(db.Float, default=0.0)        # Dearness Allowance
+    medical_allowance = db.Column(db.Float, default=0.0)
+    
+    # --- DEDUCTIONS ---
+    pf = db.Column(db.Float, default=0.0)        # Provident Fund
+    professional_tax = db.Column(db.Float, default=0.0)
+    other_deductions = db.Column(db.Float, default=0.0)
+    
     net_salary = db.Column(db.Float, nullable=False)
     
     generated_on = db.Column(db.DateTime, default=datetime.utcnow)

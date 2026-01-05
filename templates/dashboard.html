@@ -14,13 +14,17 @@
     
     {% if user_role != 'admin' %}
     <div class="btn-toolbar mb-2 mb-md-0">
-        {% if status == 'present' %}
-            <button type="button" class="btn btn-warning text-white" onclick="triggerCheckOut()">
-                <i class="fas fa-sign-out-alt"></i> Check Out
-            </button>
-        {% else %}
+        {% if status == 'Absent' %}
             <button type="button" class="btn btn-primary" onclick="triggerCheckIn()">
                 <i class="fas fa-fingerprint"></i> Check In Now
+            </button>
+        {% elif status == 'Checked Out' %}
+             <button type="button" class="btn btn-secondary" disabled>
+                <i class="fas fa-check"></i> Shift Complete
+            </button>
+        {% else %}
+            <button type="button" class="btn btn-warning text-white" onclick="triggerCheckOut()">
+                <i class="fas fa-sign-out-alt"></i> Check Out
             </button>
         {% endif %}
     </div>
@@ -32,19 +36,11 @@
         <div class="col-md-6 mx-auto">
             <div class="input-group input-group-lg shadow-sm">
                 <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Search employees by name, ID, or department..." onkeyup="filterEmployees()">
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Search employees..." onkeyup="filterEmployees()">
             </div>
         </div>
     </div>
-
-    <div class="row g-4" id="employeeGrid">
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Loading employee data...</p>
-        </div>
-    </div>
+    <div class="row g-4" id="employeeGrid"></div>
 
 {% else %}
     <div class="row g-4 mb-4">
@@ -53,12 +49,29 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="text-muted">Attendance Status</h6>
-                        <h3 class="{{ 'text-success' if status == 'present' else 'text-danger' }}">
-                            {{ status|title }}
+                        {% set status_class = 'text-danger' %}
+                        {% if status == 'On Time' %}
+                            {% set status_class = 'text-success' %}
+                        {% elif status == 'Late' %}
+                            {% set status_class = 'text-warning' %}
+                        {% elif status == 'Checked Out' %}
+                            {% set status_class = 'text-secondary' %}
+                        {% elif status == 'On Leave' %}
+                            {% set status_class = 'text-info' %}
+                        {% endif %}
+
+                        <h3 class="{{ status_class }} fw-bold">
+                            {{ status }}
                         </h3>
                     </div>
-                    <div class="fs-1 opacity-25 {{ 'text-success' if status == 'present' else 'text-danger' }}">
-                        <i class="fas fa-check-circle"></i>
+                    <div class="fs-1 opacity-25 {{ status_class }}">
+                        {% if status == 'On Time' or status == 'Late' %}
+                            <i class="fas fa-clock"></i>
+                        {% elif status == 'Checked Out' %}
+                            <i class="fas fa-door-open"></i>
+                        {% else %}
+                            <i class="fas fa-times-circle"></i>
+                        {% endif %}
                     </div>
                 </div>
                 <small class="text-muted">{{ date }}</small>
@@ -70,9 +83,9 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="text-muted">My Role</h6>
-                        <h3>{{ current_user.employee_profile.designation }}</h3>
+                        <h3 class="text-primary">{{ current_user.employee_profile.designation }}</h3>
                     </div>
-                    <div class="fs-1 text-info opacity-25"><i class="fas fa-user-tag"></i></div>
+                    <div class="fs-1 text-primary opacity-25"><i class="fas fa-user-tag"></i></div>
                 </div>
                 <small class="text-muted">{{ current_user.employee_profile.department }}</small>
             </div>
@@ -100,9 +113,13 @@
                         <td>{{ log.check_in }}</td>
                         <td>{{ log.check_out }}</td>
                         <td>
-                            <span class="badge {{ 'bg-success' if log.status == 'present' else 'bg-secondary' }}">
-                                {{ log.status }}
-                            </span>
+                            {% if log.status == 'On Time' %}
+                                <span class="badge bg-success">On Time</span>
+                            {% elif log.status == 'Late' %}
+                                <span class="badge bg-warning text-dark">Late</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ log.status }}</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% else %}
@@ -116,11 +133,12 @@
 
 {% if user_role == 'admin' %}
 <script>
-    // Define the loader script specifically for the Admin View
+    // 1. Initialize logic when page loads
     document.addEventListener('DOMContentLoaded', loadEmployeeGrid);
 
     let allEmployees = [];
 
+    // 2. Function to fetch and display employees
     async function loadEmployeeGrid() {
         const token = localStorage.getItem('access_token');
         const grid = document.getElementById('employeeGrid');
@@ -138,6 +156,7 @@
         }
     }
 
+    // 3. Helper to render the HTML cards
     function renderGrid(employees) {
         const grid = document.getElementById('employeeGrid');
         if (employees.length === 0) {
@@ -146,7 +165,7 @@
         }
 
         grid.innerHTML = employees.map(emp => {
-            // LOGIC: Check if image exists, otherwise use Initials
+            // Check if image exists, otherwise use Initials
             let imageHtml = '';
             if (emp.profile_picture && emp.profile_picture !== 'default.jpg') {
                 imageHtml = `
@@ -185,6 +204,7 @@
         `}).join('');
     }
 
+    // 4. Search Filter
     function filterEmployees() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const filtered = allEmployees.filter(emp => 

@@ -6,13 +6,11 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>My Salary Slips</h2>
-    <span class="text-muted">Generated automatically on the 28th of every month</span>
 </div>
 
 <div class="row g-4" id="payrollContainer">
     <div class="col-12 text-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted">Fetching your payslips...</p>
     </div>
 </div>
 
@@ -33,45 +31,83 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         container.innerHTML = slips.map((slip, index) => {
-            const slipId = `payslip-${index}`;
+            const slipId = `payslip-hidden-${index}`;
+            
             return `
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-4">
                 <div class="card shadow-sm border-0 h-100">
-                    <div id="${slipId}" class="p-4 bg-white rounded-top">
-                        <div class="text-center border-bottom pb-3 mb-3">
-                            <h5 class="fw-bold text-primary mb-0">DAYFLOW INC.</h5>
-                            <small class="text-muted">Salary Slip for ${slip.month} ${slip.year}</small>
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-file-invoice-dollar text-primary fa-3x mb-3"></i>
+                            <h5 class="fw-bold">${slip.month} ${slip.year}</h5>
+                            <small class="text-muted">Generated: ${slip.generated_on}</small>
                         </div>
                         
-                        <div class="row mb-2">
-                            <div class="col-6 text-muted small">Generated On:</div>
-                            <div class="col-6 text-end small fw-bold">${slip.generated_on}</div>
+                        <div class="p-3 bg-light rounded mb-3">
+                            <span class="d-block text-muted small text-uppercase">Net Salary</span>
+                            <span class="h4 text-primary fw-bold mb-0">₹${slip.net_salary.toLocaleString()}</span>
                         </div>
 
-                        <div class="py-2">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Basic Salary</span>
-                                <span class="fw-bold">₹${slip.basic.toLocaleString()}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1 text-success">
-                                <span>Allowances</span>
-                                <span>+ ₹${slip.allowances.toLocaleString()}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-3 text-danger">
-                                <span>Deductions</span>
-                                <span>- ₹${slip.deductions.toLocaleString()}</span>
-                            </div>
-                            
-                            <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-dark">NET PAY</span>
-                                <span class="h5 mb-0 text-primary">₹${slip.net_salary.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 text-center pb-4">
-                        <button class="btn btn-outline-primary btn-sm w-100" onclick="downloadPDF('${slipId}', '${slip.month}', '${slip.year}')">
-                            <i class="fas fa-file-pdf me-2"></i> Download PDF
+                        <button class="btn btn-outline-primary w-100" onclick="generatePDF('${slipId}', '${slip.month}', '${slip.year}')">
+                            <i class="fas fa-download me-2"></i> Download Slip
                         </button>
+                    </div>
+                </div>
+
+                <div id="${slipId}" style="display: none;">
+                    <div class="p-5" style="border: 2px solid #000;">
+                        <div class="text-center border-bottom pb-3 mb-4">
+                            <h2 style="color: #4a90e2; font-weight: bold;">DAYFLOW INC.</h2>
+                            <p class="text-muted">Official Salary Slip</p>
+                            <h4>${slip.month} ${slip.year}</h4>
+                        </div>
+                        
+                        <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;" border="1" cellpadding="10">
+                            <tr style="background-color: #f8f9fa;">
+                                <th colspan="2">Earnings</th>
+                                <th colspan="2">Deductions</th>
+                            </tr>
+                            <tr>
+                                <td>Basic Salary</td>
+                                <td style="text-align: right;">₹${slip.basic.toLocaleString()}</td>
+                                <td>Provident Fund</td>
+                                <td style="text-align: right; color: red;">-₹${slip.pf.toLocaleString()}</td>
+                            </tr>
+                            <tr>
+                                <td>HRA</td>
+                                <td style="text-align: right;">₹${slip.hra.toLocaleString()}</td>
+                                <td>Professional Tax</td>
+                                <td style="text-align: right; color: red;">-₹${slip.pt.toLocaleString()}</td>
+                            </tr>
+                            <tr>
+                                <td>DA</td>
+                                <td style="text-align: right;">₹${slip.da.toLocaleString()}</td>
+                                <td>Other Deductions</td>
+                                <td style="text-align: right; color: red;">-0.00</td>
+                            </tr>
+                             <tr>
+                                <td>Special Allowance</td>
+                                <td style="text-align: right;">₹${slip.medical.toLocaleString()}</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr style="font-weight: bold;">
+                                <td>Total Earnings</td>
+                                <td style="text-align: right;">₹${(slip.basic + slip.hra + slip.da + slip.medical).toLocaleString()}</td>
+                                <td>Total Deductions</td>
+                                <td style="text-align: right; color: red;">-₹${slip.deductions.toLocaleString()}</td>
+                            </tr>
+                        </table>
+                        
+                        <div style="text-align: right; margin-top: 30px;">
+                            <span style="font-size: 1.2rem; font-weight: bold;">NET PAYABLE: </span>
+                            <span style="font-size: 1.5rem; color: #4a90e2; font-weight: bold;">₹${slip.net_salary.toLocaleString()}</span>
+                        </div>
+                        
+                        <div style="margin-top: 50px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 0.8rem; color: #666;">
+                            <p>This is a system-generated payslip and does not require a signature.</p>
+                            <p>Generated on Dayflow HRMS.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,24 +116,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error(error);
-        container.innerHTML = '<p class="text-danger text-center">Failed to load payroll data.</p>';
+        container.innerHTML = '<p class="text-danger">Failed to load payroll data.</p>';
     }
 });
 
-function downloadPDF(elementId, month, year) {
+function generatePDF(elementId, month, year) {
+    // 1. Clone the hidden element
     const element = document.getElementById(elementId);
+    const clone = element.cloneNode(true);
     
-    // PDF Configuration
+    // 2. Make it visible but position it off-screen/overlay to ensure it renders
+    clone.style.display = 'block';
+    clone.style.width = '700px'; // Set fixed width for PDF consistency
+    clone.style.background = 'white';
+    
+    // 3. Generate PDF
     const opt = {
-        margin:       [10, 10],
+        margin:       10,
         filename:     `Payslip_${month}_${year}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Generate and Download
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(clone).save();
 }
 </script>
 {% endblock %}

@@ -1,83 +1,156 @@
 {% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
+{% block title %}Employee Profile{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-4 mb-4">
-        <div class="card text-center p-4 h-100">
+        <div class="card text-center p-4 border-0 shadow-sm h-100">
             <div class="mb-3 mx-auto position-relative">
                 {% if emp.profile_picture and emp.profile_picture != 'default.jpg' %}
                     <img src="{{ url_for('static', filename='uploads/profiles/' + emp.profile_picture) }}" 
-                         class="rounded-circle shadow-sm" 
-                         style="width: 120px; height: 120px; object-fit: cover;">
+                         class="rounded-circle shadow-sm border border-3 border-light" 
+                         style="width: 140px; height: 140px; object-fit: cover;">
                 {% else %}
-                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white mx-auto" 
-                         style="width: 120px; height: 120px; font-size: 2.5rem;">
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary mx-auto fw-bold" 
+                         style="width: 140px; height: 140px; font-size: 3rem;">
                         {{ emp.first_name[0] }}{{ emp.last_name[0] }}
                     </div>
                 {% endif %}
             </div>
             
-            <h4 class="fw-bold">{{ emp.first_name }} {{ emp.last_name }}</h4>
-            <p class="text-muted mb-1">{{ emp.designation }}</p>
-            <span class="badge bg-primary mb-3">{{ emp.department }}</span>
+            <h3 class="fw-bold mb-0">{{ emp.first_name }} {{ emp.last_name }}</h3>
+            <p class="text-muted mb-2">{{ emp.designation }}</p>
+            <div><span class="badge bg-primary px-3 py-2 rounded-pill">{{ emp.department }}</span></div>
+            
+            <div class="mt-4 pt-3 border-top text-start">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-envelope text-muted me-3" style="width: 20px;"></i> 
+                    <span>{{ emp.user.email }}</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-phone text-muted me-3" style="width: 20px;"></i> 
+                    <span>{{ emp.phone or 'N/A' }}</span>
+                </div>
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-map-marker-alt text-muted me-3 mt-1" style="width: 20px;"></i> 
+                    <span>{{ emp.address or 'N/A' }}</span>
+                </div>
+            </div>
 
             {% if current_user.employee_profile.id == emp.id %}
-            <button class="btn btn-outline-primary mt-auto" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                <i class="fas fa-edit me-2"></i> Edit Profile
+            <button class="btn btn-outline-primary mt-4 w-100" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-edit me-2"></i> Edit My Details
             </button>
             {% endif %}
         </div>
     </div>
     
     <div class="col-md-8">
-        <div class="card h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0">Employee Information</h5>
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 pt-3 px-4">
+                <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#personal">
+                            <i class="fas fa-user me-2"></i> Personal
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#financial">
+                            <i class="fas fa-landmark me-2"></i> Financial & Accounts
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#job">
+                            <i class="fas fa-briefcase me-2"></i> Job Details
+                        </button>
+                    </li>
+                </ul>
             </div>
-            <div class="card-body">
-                <form>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted">Full Name</label>
-                            <input type="text" class="form-control" value="{{ emp.first_name }} {{ emp.last_name }}" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted">Employee ID</label>
-                            <input type="text" class="form-control" value="{{ emp.user.employee_id_number }}" readonly>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted">Email Address</label>
-                            <input type="email" class="form-control" value="{{ emp.user.email }}" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted">Phone Number</label>
-                            <input type="text" class="form-control" value="{{ emp.phone or 'N/A' }}" readonly>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <label class="form-label text-muted">Current Address</label>
-                            <textarea class="form-control" rows="2" readonly>{{ emp.address or 'N/A' }}</textarea>
+            
+            <div class="card-body p-4">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="personal">
+                        <h5 class="mb-4 text-primary">Basic Information</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Gender</label>
+                                <p class="fw-bold">{{ emp.gender or '-' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Marital Status</label>
+                                <p class="fw-bold">{{ emp.marital_status or '-' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Date of Birth</label>
+                                <p class="fw-bold">{{ emp.date_of_birth or '-' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Emergency Contact</label>
+                                <p class="fw-bold text-danger">{{ emp.emergency_contact or 'Not set' }}</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted">Date of Joining</label>
-                            <input type="text" class="form-control" value="{{ emp.date_of_joining }}" readonly>
-                        </div>
-                        <div class="col-md-6">
-                             <label class="form-label text-muted">Monthly Wage</label>
-                             {% if current_user.id == emp.user_id or current_user.role.value == 'Admin' %}
-                                <input type="text" class="form-control" value="₹{{ emp.monthly_wage }}" readonly>
-                             {% else %}
-                                <input type="text" class="form-control" value="Confidential" readonly>
-                             {% endif %}
+
+                    <div class="tab-pane fade" id="financial">
+                        <h5 class="mb-4 text-primary">Bank & Account Information</h5>
+                        
+                        {% if current_user.id == emp.user_id or current_user.role.value in ['Admin', 'HR'] %}
+                            <div class="p-3 bg-light rounded mb-3 border">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="text-muted small text-uppercase">Bank Name</label>
+                                        <p class="fw-bold mb-0">{{ emp.bank_name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small text-uppercase">IFSC Code</label>
+                                        <p class="fw-bold mb-0 font-monospace">{{ emp.ifsc_code }}</p>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="text-muted small text-uppercase">Account Number</label>
+                                        <p class="fw-bold mb-0 font-monospace fs-5">{{ emp.account_number }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted small text-uppercase">PAN Number</label>
+                                    <p class="fw-bold">{{ emp.pan_number }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small text-uppercase">Monthly Wage (Gross)</label>
+                                    <p class="fw-bold text-success fs-5">₹{{ emp.monthly_wage }}</p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-secondary text-center">
+                                <i class="fas fa-lock me-2"></i> This information is confidential.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="tab-pane fade" id="job">
+                        <h5 class="mb-4 text-primary">Employment Details</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Employee ID</label>
+                                <p class="fw-bold font-monospace">{{ emp.user.employee_id_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Date of Joining</label>
+                                <p class="fw-bold">{{ emp.date_of_joining }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Current Status</label>
+                                <span class="badge bg-success">Active</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small text-uppercase">Employment Type</label>
+                                <p class="fw-bold">Full Time</p>
+                            </div>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -92,22 +165,71 @@
             </div>
             <div class="modal-body">
                 <form id="editProfileForm" onsubmit="handleProfileUpdate(event)">
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" name="phone" class="form-control" value="{{ emp.phone }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" class="form-control" rows="3">{{ emp.address }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Profile Picture</label>
-                        <input type="file" name="profile_picture" class="form-control" accept="image/*">
-                        <small class="text-muted">Max size 2MB (JPG, PNG)</small>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
-                </form>
+    <ul class="nav nav-pills mb-3" id="editTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active py-1" data-bs-toggle="pill" data-bs-target="#editPersonal" type="button">Personal</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link py-1" data-bs-toggle="pill" data-bs-target="#editBank" type="button">Bank Info</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="editPersonal">
+            <div class="row g-2">
+                <div class="col-6 mb-2">
+                    <label class="form-label small">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ emp.phone or '' }}">
+                </div>
+                <div class="col-6 mb-2">
+                    <label class="form-label small">Marital Status</label>
+                    <select name="marital_status" class="form-select">
+                        <option value="Single" {% if emp.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="Married" {% if emp.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                    </select>
+                </div>
+                <div class="col-12 mb-2">
+                    <label class="form-label small">Address</label>
+                    <textarea name="address" class="form-control" rows="2">{{ emp.address or '' }}</textarea>
+                </div>
+                <div class="col-12 mb-2">
+                    <label class="form-label small">Emergency Contact</label>
+                    <input type="text" name="emergency_contact" class="form-control" value="{{ emp.emergency_contact or '' }}">
+                </div>
+                <div class="col-12 mb-2">
+                    <label class="form-label small">Profile Picture</label>
+                    <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="editBank">
+            <div class="alert alert-warning small py-2"><i class="fas fa-info-circle"></i> Admins will be notified of changes here.</div>
+            <div class="row g-2">
+                <div class="col-6 mb-2">
+                    <label class="form-label small">Bank Name</label>
+                    <input type="text" name="bank_name" class="form-control" value="{{ emp.bank_name or '' }}">
+                </div>
+                <div class="col-6 mb-2">
+                    <label class="form-label small">IFSC Code</label>
+                    <input type="text" name="ifsc_code" class="form-control" value="{{ emp.ifsc_code or '' }}">
+                </div>
+                <div class="col-12 mb-2">
+                    <label class="form-label small">Account Number</label>
+                    <input type="text" name="account_number" class="form-control" value="{{ emp.account_number or '' }}">
+                </div>
+                <div class="col-6 mb-2">
+                    <label class="form-label small">PAN Number</label>
+                    <input type="text" name="pan_number" class="form-control" value="{{ emp.pan_number or '' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+    </div>
+</form>
             </div>
         </div>
     </div>
@@ -116,33 +238,23 @@
 <script>
 async function handleProfileUpdate(event) {
     event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
+    const formData = new FormData(event.target);
     const token = localStorage.getItem('access_token');
 
     try {
         const response = await fetch('/api/employee/update-profile', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}` 
-                // Note: Do NOT set Content-Type header when sending FormData; 
-                // the browser sets it automatically with the boundary.
-            },
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
-
         const result = await response.json();
-        
         if (response.ok) {
             alert("✅ " + result.message);
             location.reload();
         } else {
             alert("⚠️ " + result.message);
         }
-    } catch (error) {
-        console.error(error);
-        alert("Failed to update profile.");
-    }
+    } catch (e) { alert("Failed to update."); }
 }
 </script>
 {% endblock %}

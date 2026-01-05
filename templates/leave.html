@@ -2,9 +2,35 @@
 {% block title %}Leave Management{% endblock %}
 
 {% block content %}
+<h2 class="mb-4 text-primary fw-bold">Time Off Management</h2>
+
+<div id="adminLeaveSection" class="card shadow-sm border-warning mb-5 d-none">
+    <div class="card-header bg-warning bg-opacity-10 border-warning">
+        <h5 class="mb-0 text-dark"><i class="fas fa-user-shield me-2"></i> Pending Approvals (Manager View)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Type</th>
+                        <th>Dates</th>
+                        <th>Reason</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adminLeaveTable">
+                    <tr><td colspan="5" class="text-center py-4 text-muted">No pending requests found.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-4">
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4">
             <div class="card-header bg-white">
                 <h5 class="mb-0">Apply for Leave</h5>
             </div>
@@ -28,7 +54,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Reason</label>
-                        <textarea class="form-control" name="reason" rows="3"></textarea>
+                        <textarea class="form-control" name="reason" rows="3" placeholder="Brief reason..."></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Submit Request</button>
                 </form>
@@ -37,9 +63,9 @@
     </div>
 
     <div class="col-md-8">
-        <div class="card">
+        <div class="card shadow-sm">
             <div class="card-header bg-white">
-                <h5 class="mb-0">My Leave History</h5>
+                <h5 class="mb-0">My Application History</h5>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle" id="leaveTable">
@@ -52,7 +78,8 @@
                         </tr>
                     </thead>
                     <tbody id="leaveTableBody">
-                        </tbody>
+                        <tr><td colspan="4" class="text-center py-3">Loading...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -60,13 +87,81 @@
 </div>
 
 <script>
-    // 1. Handle Form Submit
+    const token = localStorage.getItem('access_token');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMyLeaves();
+        checkAdminAccess();
+    });
+
+    // --- 1. ADMIN LOGIC ---
+    function checkAdminAccess() {
+        if (!token) return;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.role === 'Admin' || payload.role === 'HR') {
+                document.getElementById('adminLeaveSection').classList.remove('d-none');
+                loadPendingLeaves();
+            }
+        } catch (e) { console.error("Role check failed", e); }
+    }
+
+    async function loadPendingLeaves() {
+        try {
+            const res = await fetch('/api/leave/pending', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const tbody = document.getElementById('adminLeaveTable');
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No pending requests found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(req => `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${req.employee_name}</div>
+                        <small class="text-muted">${req.employee_id}</small>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">${req.type}</span></td>
+                    <td><small>${req.start} to ${req.end}</small></td>
+                    <td><small class="text-muted">${req.reason || '-'}</small></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-success me-1" onclick="processLeave(${req.id}, 'approve')"><i class="fas fa-check"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="processLeave(${req.id}, 'reject')"><i class="fas fa-times"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    async function processLeave(id, action) {
+        if (!confirm(`Are you sure you want to ${action} this request?`)) return;
+
+        try {
+            const res = await fetch(`/api/leave/${action}/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await res.json();
+            
+            if (res.ok) {
+                alert("✅ " + result.message);
+                loadPendingLeaves(); // Refresh Admin Table
+                loadMyLeaves();      // Refresh My Table (in case admin approves own leave)
+            } else {
+                alert("⚠️ " + result.message);
+            }
+        } catch (e) { alert("Action failed"); }
+    }
+
+    // --- 2. EMPLOYEE LOGIC ---
     async function handleLeaveApply(event) {
         event.preventDefault();
         const form = event.target;
-        const formData = new FormData(form);
-        const payload = Object.fromEntries(formData.entries());
-        const token = localStorage.getItem('access_token');
+        const payload = Object.fromEntries(new FormData(form).entries());
 
         try {
             const response = await fetch('/api/leave/apply', {
@@ -80,44 +175,44 @@
 
             const result = await response.json();
             if (response.ok) {
-                alert("✅ " + result.message);
-                loadMyLeaves(); // Refresh list
+                alert("✅ Application Submitted!");
+                loadMyLeaves(); 
                 form.reset();
+                if(!document.getElementById('adminLeaveSection').classList.contains('d-none')) {
+                    loadPendingLeaves(); // Refresh admin view instantly if admin applies
+                }
             } else {
                 alert("⚠️ " + (result.error || result.message));
             }
-        } catch (error) {
-            console.error(error);
-            alert("Failed to submit request.");
-        }
+        } catch (error) { alert("Failed to submit request."); }
     }
 
-    // 2. Load Leave History on Page Load
     async function loadMyLeaves() {
-        const token = localStorage.getItem('access_token');
         const tbody = document.getElementById('leaveTableBody');
-        
         try {
             const response = await fetch('/api/leave/my-requests', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
             
-            if(response.ok) {
-                tbody.innerHTML = data.map(leave => `
-                    <tr>
-                        <td>${leave.type}</td>
-                        <td>${leave.start}</td>
-                        <td>${leave.end}</td>
-                        <td>
-                            <span class="badge ${getStatusBadge(leave.status)}">
-                                ${leave.status}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No history found.</td></tr>';
+                return;
             }
-        } catch(e) { console.error(e); }
+
+            tbody.innerHTML = data.map(leave => `
+                <tr>
+                    <td>${leave.type}</td>
+                    <td>${leave.start}</td>
+                    <td>${leave.end}</td>
+                    <td>
+                        <span class="badge ${getStatusBadge(leave.status)}">
+                            ${leave.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(e) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading data.</td></tr>'; }
     }
 
     function getStatusBadge(status) {
@@ -125,8 +220,5 @@
         if(status === 'Rejected') return 'bg-danger';
         return 'bg-warning text-dark';
     }
-
-    // Initialize
-    loadMyLeaves();
 </script>
 {% endblock %}

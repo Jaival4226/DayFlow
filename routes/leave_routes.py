@@ -41,3 +41,25 @@ def approve_leave(leave_id):
 def reject_leave(leave_id):
     result, status_code = LeaveService.reject_leave(leave_id)
     return jsonify(result), status_code
+
+
+# ... existing imports ...
+
+@leave_bp.route('/pending', methods=['GET'])
+@jwt_required()
+@admin_required # Ensures only Admin/HR can see this
+def get_pending_requests():
+    leaves = LeaveService.get_all_pending()
+    
+    data = [{
+        "id": l.id,
+        "employee_name": f"{l.employee.first_name} {l.employee.last_name}",
+        "employee_id": l.employee.user.employee_id_number,
+        "type": l.leave_type,
+        "start": str(l.start_date),
+        "end": str(l.end_date),
+        "reason": l.reason,
+        "applied_on": l.applied_on.strftime("%Y-%m-%d")
+    } for l in leaves]
+    
+    return jsonify(data), 200

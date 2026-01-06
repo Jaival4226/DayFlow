@@ -4,3 +4,5 @@ from .employee import Employee
 from .attendance import Attendance
 from .leave import Leave
 from .payroll import Payroll
+# ... other imports ...
+from .modification_request import ModificationRequest

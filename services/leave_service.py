@@ -57,3 +57,11 @@ class LeaveService:
         leave_request.status = 'Rejected'
         db.session.commit()
         return {"message": "Leave rejected successfully"}, 200
+    
+    # ... inside LeaveService class ...
+
+    @staticmethod
+    def get_all_pending():
+        # Fetch ALL leaves where status is 'Pending'
+        # We join with Employee model implicitly via the relationship
+        return Leave.query.filter_by(status='Pending').order_by(Leave.applied_on.desc()).all()
